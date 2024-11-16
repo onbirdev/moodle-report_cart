@@ -85,6 +85,13 @@ class cart_search extends base_object {
     private ?int $to = null;
 
     /**
+     * Pagination limit (number of records per page).
+     *
+     * @var int
+     */
+    private int $perpage = 30;
+
+    /**
      * Load data into the search filters from an input object.
      *
      * @param object|null $data Input data containing search criteria.
@@ -162,8 +169,36 @@ class cart_search extends base_object {
         $select = 'c.*, u.username, u.email, u.firstname as first_name, u.lastname as last_name';
         $where = $this->build_where();
 
-        return "SELECT {$select} FROM {enrol_cart} c INNER JOIN {user} u ON c.user_id = u.id" .
-            (!empty($where) ? " WHERE {$where}" : '');
+        $sql = "SELECT {$select} FROM {enrol_cart} c INNER JOIN {user} u ON c.user_id = u.id";
+        if (!empty($where)) {
+            $sql .= " WHERE {$where}";
+        }
+
+        if (!empty($this->orderby)) {
+            $sql .= " ORDER BY {$this->orderby}";
+        }
+
+        $limit = $this->get_perpage();
+        $offset = $this->get_offset();
+        $sql .= " LIMIT {$limit} OFFSET {$offset}";
+
+        return $sql;
+    }
+
+    /**
+     * Build the SQL query for counting the total number of matching carts.
+     *
+     * @return string The complete SQL query for counting.
+     */
+    private function build_count_sql(): string {
+        $where = $this->build_where();
+
+        $sql = 'SELECT COUNT(c.id) FROM {enrol_cart} c';
+        if (!empty($where)) {
+            $sql .= " WHERE {$where}";
+        }
+
+        return $sql;
     }
 
     /**
@@ -175,5 +210,63 @@ class cart_search extends base_object {
         global $DB;
         $rows = $DB->get_records_sql($this->build_sql(), $this->params);
         return cart::populate($rows);
+    }
+
+    /**
+     * Count all records matching the search criteria.
+     *
+     * @return int The total number of records matching the search conditions.
+     */
+    public function count_all(): int {
+        global $DB;
+        return $DB->count_records_sql($this->build_count_sql(), $this->params);
+    }
+
+    /**
+     * Get the offset for the pagination based on the current page and records per page.
+     *
+     * @return int The offset value for pagination.
+     */
+    public function get_offset(): int {
+        return $this->get_perpage() * $this->get_page();
+    }
+
+    /**
+     * Get the current page number from the URL parameter 'page'.
+     *
+     * @return int The current page number, defaulting to 0 if not provided.
+     */
+    public function get_page(): int {
+        return optional_param('page', 0, PARAM_INT);
+    }
+
+    /**
+     * Get the number of records to display per page.
+     *
+     * @return int The number of records per page.
+     */
+    public function get_perpage(): int {
+        return $this->perpage;
+    }
+
+    /**
+     * Retrieves the pagination parameters for the cart search.
+     *
+     * This function collects the values of the search filters (e.g., cart ID, user, coupon code, etc.)
+     * and prepares them for inclusion in the URL query string for pagination.
+     *
+     * @return array An associative array of pagination parameters where the keys are the filter fields
+     *               and the values are the corresponding filter values.
+     */
+    public function get_pagination_params(): array {
+        $params = [];
+
+        // List of fields to include in pagination.
+        $fields = ['id', 'user', 'couponcode', 'status', 'from', 'to'];
+        foreach ($fields as $field) {
+            $params[$field] = (string) $this->$field;
+        }
+
+        return $params;
     }
 }

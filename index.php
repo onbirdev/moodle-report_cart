@@ -107,4 +107,10 @@ foreach ($carts as $cart) {
 echo $OUTPUT->header();
 $form->display();
 echo html_writer::table($table);
+echo $OUTPUT->paging_bar(
+    $search->count_all(),
+    $search->get_page(),
+    $search->get_perpage(),
+    new moodle_url('/report/cart/index.php', $search->get_pagination_params()),
+);
 echo $OUTPUT->footer();
