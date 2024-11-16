@@ -29,3 +29,6 @@ $string['cart:view'] = 'View shopping cart report';
 
 $string['apply'] = 'Apply';
 $string['checkout_at'] = 'Checkout Time';
+$string['all'] = 'All';
+$string['checkout_time_from'] = 'Checkout Time From';
+$string['checkout_time_to'] = 'Checkout Time To';

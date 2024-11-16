@@ -78,8 +78,8 @@ class cart_search_form extends moodleform {
         );
 
         // Add a text field for filtering by coupon code.
-        $form->addElement('text', 'coupon_code', get_string('coupon_code', 'enrol_cart'));
-        $form->setType('coupon_code', PARAM_TEXT);
+        $form->addElement('text', 'couponcode', get_string('coupon_code', 'enrol_cart'));
+        $form->setType('couponcode', PARAM_TEXT);
 
         // Add a dropdown selector for filtering by cart status.
         $options = ['' => get_string('all', 'report_cart')];

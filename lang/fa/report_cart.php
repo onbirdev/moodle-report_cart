@@ -29,3 +29,6 @@ $string['cart:view'] = 'مشاهده گزارش سبد خرید';
 
 $string['apply'] = 'اعمال';
 $string['checkout_at'] = 'زمان تکمیل خرید';
+$string['all'] = 'همه';
+$string['checkout_time_from'] = 'زمان تکمیل خرید از';
+$string['checkout_time_to'] = 'زمان تکمیل خرید تا';
