@@ -24,8 +24,37 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'Shopping Cart Report';
-$string['cart:view'] = 'View shopping cart report';
+namespace report_cart\object;
 
-$string['apply'] = 'Apply';
-$string['checkout_at'] = 'Checkout Time';
+use enrol_cart\object\base_object;
+
+class cart_search extends base_object {
+    private ?int $user = null;
+
+    public function load_data($array) {
+
+    }
+
+    public function build_query(): string {
+        $sql = "SELECT c.*, u.username, u.email, u.firstname as first_name, u.lastname as last_name 
+FROM {enrol_cart} c 
+    INNER JOIN {user} u ON c.user_id = u.id";
+
+        return $sql;
+    }
+
+    public function get_params(): array {
+        return [];
+    }
+
+    /**
+     * @return cart[] The array of cart report objects.
+     */
+    public function get_all() {
+        global $DB;
+
+        $rows = $DB->get_records_sql($this->build_query(), $this->get_params());
+
+        return cart::populate($rows);
+    }
+}

@@ -26,8 +26,30 @@
 
 namespace report_cart\object;
 
-use enrol_cart\object\base_model;
+/**
+ * Represents a user object that extends the base user object in enrol_cart.
+ *
+ * This class provides additional methods for populating user data
+ * from a cart report.
+ */
+class user extends \enrol_cart\object\user {
+    /**
+     * Populates a user object using data from a cart report.
+     *
+     * This method extracts user-related fields from the given cart report
+     * and creates a new user object.
+     *
+     * @param cart $cartreport The cart report object containing user data.
+     * @return self The populated user object.
+     */
+    public static function populate_from_cart_report(cart $cartreport): self {
+        $user = [
+            'id' => $cartreport->user_id,
+            'username' => $cartreport->username,
+            'first_name' => $cartreport->first_name,
+            'last_name' => $cartreport->last_name,
+        ];
 
-class cart_report extends base_model {
-
+        return static::populate_one($user);
+    }
 }

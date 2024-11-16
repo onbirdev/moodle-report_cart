@@ -28,3 +28,4 @@ $string['pluginname'] = 'گزارش سبد خرید';
 $string['cart:view'] = 'مشاهده گزارش سبد خرید';
 
 $string['apply'] = 'اعمال';
+$string['checkout_at'] = 'زمان تکمیل خرید';

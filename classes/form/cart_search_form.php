@@ -35,7 +35,7 @@ require_once("$CFG->libdir/formslib.php");
 /**
  * This class defines a filter form for the shopping cart report in Moodle.
  */
-class cart_report_filter_form extends moodleform {
+class cart_search_form extends moodleform {
     /**
      * {@inheritdoc}
      */
