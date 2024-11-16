@@ -26,6 +26,8 @@
 
 namespace report_cart\object;
 
-class cart_report {
+use enrol_cart\object\base_model;
+
+class cart_report extends base_model {
 
 }

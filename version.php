@@ -29,3 +29,6 @@ defined('MOODLE_INTERNAL') || die();
 $plugin->component = 'report_cart';
 $plugin->version = 2024101500;
 $plugin->requires = 2020110300;
+$plugin->dependencies = [
+    'enrol_cart' => ANY_VERSION,
+];
