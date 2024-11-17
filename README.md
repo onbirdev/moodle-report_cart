@@ -13,8 +13,6 @@ The Moodle Cart Report Plugin provides detailed insights into shopping cart acti
     - Date range
 - Sorting and pagination support for large datasets.
 - Displays summarized payment totals grouped by currency.
-- Export data for further analysis (e.g., in Excel or CSV).
-- Intuitive and user-friendly interface.
 
 ---
 
@@ -39,7 +37,6 @@ The Moodle Cart Report Plugin provides detailed insights into shopping cart acti
     - Enter user IDs, date ranges, coupon codes, or statuses as needed.
 3. View the table of results with sortable columns.
 4. Check the summarized payment totals displayed below the table.
-5. Optionally, export the report for offline analysis.
 
 ---
 
