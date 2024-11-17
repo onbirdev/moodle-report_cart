@@ -26,8 +26,11 @@
 
 namespace report_cart\object;
 
+use core_renderer;
 use enrol_cart\object\base_object;
 use enrol_cart\object\cart_status_interface;
+use html_writer;
+use moodle_url;
 
 /**
  * Class cart_search
@@ -90,6 +93,30 @@ class cart_search extends base_object {
      * @var int
      */
     private int $perpage = 30;
+
+    /**
+     * Sorting column name.
+     *
+     * @var string|null
+     */
+    private ?string $sort = null;
+
+    /**
+     * Sorting direction.
+     *
+     * @var string|null
+     */
+    private ?string $dir = null;
+
+    /**
+     * Initializes the sorting properties.
+     *
+     * @return void
+     */
+    public function init(): void {
+        $this->sort = $this->get_sort();
+        $this->dir = $this->get_dir();
+    }
 
     /**
      * Load data into the search filters from an input object.
@@ -174,8 +201,10 @@ class cart_search extends base_object {
             $sql .= " WHERE {$where}";
         }
 
-        if (!empty($this->orderby)) {
-            $sql .= " ORDER BY {$this->orderby}";
+        $sort = $this->get_sort();
+        $dir = $this->get_dir();
+        if ($sort && $dir) {
+            $sql .= " ORDER BY {$sort} {$dir}";
         }
 
         $limit = $this->get_perpage();
@@ -250,19 +279,83 @@ class cart_search extends base_object {
     }
 
     /**
-     * Retrieves the pagination parameters for the cart search.
+     * Retrieves the current sort field, ensuring it is a valid option.
+     *
+     * @return string|null The sort field (e.g., 'id', 'coupon_code'), or null if not set.
+     */
+    public function get_sort(): ?string {
+        if ($this->sort === null) {
+            $allowedsortfields = ['id', 'coupon_code', 'payable', 'status', 'checkout_at'];
+            $sort = optional_param('sort', 'checkout_at', PARAM_ALPHANUMEXT);
+            if (in_array($sort, $allowedsortfields)) {
+                $this->sort = $sort;
+            }
+        }
+        return $this->sort;
+    }
+
+    /**
+     * Retrieves the current sort direction (ascending or descending).
+     *
+     * @return string The sort direction ('ASC' or 'DESC').
+     */
+    public function get_dir(): string {
+        if ($this->dir === null) {
+            $dir = optional_param('dir', 'DESC', PARAM_ALPHANUMEXT);
+            $this->dir = strtoupper($dir) === 'DESC' ? 'DESC' : 'ASC';
+        }
+        return $this->dir;
+    }
+
+    /**
+     * Generates the sort icon based on the current sort direction.
+     *
+     * @return string The HTML for the sort icon.
+     */
+    private function get_sort_icon(): string {
+        global $OUTPUT;
+        $dir = $this->get_dir();
+        $icon = $dir === 'DESC' ? 'sort_desc' : 'sort_asc';
+        return $OUTPUT->pix_icon('t/' . $icon, get_string(strtolower($dir), 'core'), 'core', ['class' => 'iconsort']);
+    }
+
+    /**
+     * Generates the column header with sorting links and icons for a table.
+     *
+     * @param string $key The field to sort by.
+     * @param string $label The display label for the column header.
+     * @return string The HTML for the column header, including the sort link and icon.
+     */
+    public function get_table_column_head(string $key, string $label): string {
+        $sort = $this->get_sort();
+        $dir = $this->get_dir();
+        $icon = $this->get_sort_icon();
+
+        $params = $this->get_url_params();
+        $params['sort'] = $key;
+        $params['dir'] = $dir === 'ASC' ? 'DESC' : 'ASC';
+
+        $link = html_writer::tag('a', $label, [
+            'href' => new moodle_url('/report/cart/index.php', $params),
+        ]);
+
+        return $link . ($sort === $key ? $icon : '');
+    }
+
+    /**
+     * Retrieves the url parameters for the cart search.
      *
      * This function collects the values of the search filters (e.g., cart ID, user, coupon code, etc.)
-     * and prepares them for inclusion in the URL query string for pagination.
+     * and prepares them for inclusion in the URL query string.
      *
-     * @return array An associative array of pagination parameters where the keys are the filter fields
+     * @return array An associative array of url parameters where the keys are the filter fields
      *               and the values are the corresponding filter values.
      */
-    public function get_pagination_params(): array {
+    public function get_url_params(): array {
         $params = [];
 
-        // List of fields to include in pagination.
-        $fields = ['id', 'user', 'couponcode', 'status', 'from', 'to'];
+        // List of fields to include in url.
+        $fields = ['id', 'user', 'couponcode', 'status', 'from', 'to', 'sort', 'dir'];
         foreach ($fields as $field) {
             $params[$field] = (string) $this->$field;
         }

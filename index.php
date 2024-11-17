@@ -67,13 +67,13 @@ $carts = $search->get_all();
 $table = new html_table();
 $table->head = [
     '#',
-    get_string('order_id', 'enrol_cart'),
+    $search->get_table_column_head('id', get_string('order_id', 'enrol_cart')),
     get_string('user', 'enrol_cart'),
-    get_string('coupon_code', 'enrol_cart'),
+    $search->get_table_column_head('coupon_code', get_string('coupon_code', 'enrol_cart')),
     get_string('discount', 'enrol_cart'),
-    get_string('payable', 'enrol_cart'),
-    get_string('cart_status', 'enrol_cart'),
-    get_string('checkout_at', 'report_cart'),
+    $search->get_table_column_head('payable', get_string('payable', 'enrol_cart')),
+    $search->get_table_column_head('status', get_string('cart_status', 'enrol_cart')),
+    $search->get_table_column_head('checkout_at', get_string('checkout_at', 'report_cart')),
 ];
 $table->attributes = ['class' => 'generaltable'];
 $table->data = [];
@@ -100,8 +100,8 @@ foreach ($carts as $cart) {
         $cart->coupon_code ?: '--',
         $cart->get_final_discount_amount()
             ? html_writer::tag('span', $cart->get_final_discount_amount_formatted(), [
-            'class' => 'currency',
-        ])
+                'class' => 'currency',
+            ])
             : '--',
         html_writer::tag('span', $cart->get_payable_formatted(), ['class' => 'currency']),
         $cart->get_status_name_formatted_html(),
@@ -119,6 +119,6 @@ echo $OUTPUT->paging_bar(
     $search->count_all(),
     $search->get_page(),
     $search->get_perpage(),
-    new moodle_url('/report/cart/index.php', $search->get_pagination_params()),
+    new moodle_url('/report/cart/index.php', $search->get_url_params()),
 );
 echo $OUTPUT->footer();
