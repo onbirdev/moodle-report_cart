@@ -79,6 +79,14 @@ $table->attributes = ['class' => 'generaltable'];
 $table->data = [];
 $i = $offset;
 
+// Add a row to the table indicating no results were found, spanning all columns.
+if (empty($carts)) {
+    $cell = new html_table_cell(get_string('no_results_found', 'report_cart'));
+    $cell->colspan = 8;
+    $cell->attributes['class'] = 'text-center';
+    $table->data[] = new html_table_row([$cell]);
+}
+
 // Populate the table rows with cart data.
 foreach ($carts as $cart) {
     $i++;
@@ -92,8 +100,8 @@ foreach ($carts as $cart) {
         $cart->coupon_code ?: '--',
         $cart->get_final_discount_amount()
             ? html_writer::tag('span', $cart->get_final_discount_amount_formatted(), [
-                'class' => 'currency',
-            ])
+            'class' => 'currency',
+        ])
             : '--',
         html_writer::tag('span', $cart->get_payable_formatted(), ['class' => 'currency']),
         $cart->get_status_name_formatted_html(),

@@ -32,3 +32,4 @@ $string['checkout_at'] = 'Checkout Time';
 $string['all'] = 'All';
 $string['checkout_time_from'] = 'Checkout Time From';
 $string['checkout_time_to'] = 'Checkout Time To';
+$string['no_results_found'] = 'No results found.';
