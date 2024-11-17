@@ -147,7 +147,7 @@ class cart_search extends base_object {
         $this->add_condition($where, 'c.status = :status', 'status', $this->status);
         $this->add_condition($where, 'c.coupon_code = :coupon_code', 'coupon_code', $this->couponcode);
 
-        if ($this->from !== null || $this->to !== null) {
+        if ($this->from || $this->to) {
             $this->add_condition(
                 $where,
                 'c.status = :status_delivered',
