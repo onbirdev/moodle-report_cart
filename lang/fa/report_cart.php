@@ -33,3 +33,5 @@ $string['all'] = 'همه';
 $string['checkout_time_from'] = 'زمان تکمیل خرید از';
 $string['checkout_time_to'] = 'زمان تکمیل خرید تا';
 $string['no_results_found'] = 'نتیجه‌ای یافت نشد.';
+$string['pagination_info'] =
+    'نمایش <b>{$a->begin} تا {$a->end}</b> مورد از کل <b>{$a->total}</b> مورد.';

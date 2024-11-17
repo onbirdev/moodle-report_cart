@@ -60,8 +60,11 @@ if ($form->is_cancelled()) {
 // Process filter data and fetch the relevant cart reports.
 $search = new cart_search();
 $search->load_data($form->get_data());
-$offset = 0;
 $carts = $search->get_all();
+$total = $search->count_all();
+$offset = $search->get_offset();
+$begin = $offset + 1;
+$end = $begin + count($carts) - 1;
 
 // Create and populate the report table.
 $table = new html_table();
@@ -114,9 +117,16 @@ foreach ($carts as $cart) {
 // Render the page.
 echo $OUTPUT->header();
 $form->display();
+if (!empty($carts)) {
+    echo get_string('pagination_info', 'report_cart', [
+        'begin' => number_format($begin),
+        'end' => number_format($end),
+        'total' => number_format($total),
+    ]);
+}
 echo html_writer::table($table);
 echo $OUTPUT->paging_bar(
-    $search->count_all(),
+    $total,
     $search->get_page(),
     $search->get_perpage(),
     new moodle_url('/report/cart/index.php', $search->get_url_params()),

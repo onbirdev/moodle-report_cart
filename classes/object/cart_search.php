@@ -26,7 +26,6 @@
 
 namespace report_cart\object;
 
-use core_renderer;
 use enrol_cart\object\base_object;
 use enrol_cart\object\cart_status_interface;
 use html_writer;
