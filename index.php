@@ -103,8 +103,8 @@ foreach ($carts as $cart) {
         $cart->coupon_code ?: '--',
         $cart->get_final_discount_amount()
             ? html_writer::tag('span', $cart->get_final_discount_amount_formatted(), [
-                'class' => 'currency',
-            ])
+            'class' => 'currency',
+        ])
             : '--',
         html_writer::tag('span', $cart->get_payable_formatted(), ['class' => 'currency']),
         $cart->get_status_name_formatted_html(),
@@ -116,7 +116,9 @@ foreach ($carts as $cart) {
 
 // Render the page.
 echo $OUTPUT->header();
+
 $form->display();
+
 if (!empty($carts)) {
     echo get_string('pagination_info', 'report_cart', [
         'begin' => number_format($begin),
@@ -124,11 +126,18 @@ if (!empty($carts)) {
         'total' => number_format($total),
     ]);
 }
+
+foreach ($search->get_total_payable() as $item) {
+    echo html_writer::tag('div', get_string('total_payable', 'report_cart', $item->payable_formatted));
+}
+
 echo html_writer::table($table);
+
 echo $OUTPUT->paging_bar(
     $total,
     $search->get_page(),
     $search->get_perpage(),
     new moodle_url('/report/cart/index.php', $search->get_url_params()),
 );
+
 echo $OUTPUT->footer();

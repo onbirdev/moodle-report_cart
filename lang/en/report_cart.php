@@ -34,3 +34,4 @@ $string['checkout_time_from'] = 'Checkout Time From';
 $string['checkout_time_to'] = 'Checkout Time To';
 $string['no_results_found'] = 'No results found.';
 $string['pagination_info'] = 'Showing <b>{$a->begin}-{$a->end}</b> of <b>{$a->total}</b> items.';
+$string['total_payable'] = 'Total Payable: <span class="currency">{$a}</span>';
