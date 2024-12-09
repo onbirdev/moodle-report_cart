@@ -24,8 +24,8 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use report_cart\form\cart_search_form;
-use report_cart\object\cart_search;
+use report_cart\local\form\cart_search_form;
+use report_cart\local\object\cart_search;
 
 require_once('../../config.php');
 

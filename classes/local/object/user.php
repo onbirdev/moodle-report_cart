@@ -24,7 +24,7 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace report_cart\object;
+namespace report_cart\local\object;
 
 /**
  * Represents a user object that extends the base user object in enrol_cart.
@@ -32,7 +32,7 @@ namespace report_cart\object;
  * This class provides additional methods for populating user data
  * from a cart report.
  */
-class user extends \enrol_cart\object\user {
+class user extends \enrol_cart\local\object\user {
     /**
      * Populates a user object using data from a cart report.
      *

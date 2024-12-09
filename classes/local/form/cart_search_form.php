@@ -24,13 +24,13 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace report_cart\form;
+namespace report_cart\local\form;
 
 defined('MOODLE_INTERNAL') || die();
 
-use enrol_cart\object\cart_status_interface;
+use enrol_cart\local\object\cart_status_interface;
 use moodleform;
-use report_cart\object\cart;
+use report_cart\local\object\cart;
 
 require_once("$CFG->libdir/formslib.php");
 
