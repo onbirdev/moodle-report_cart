@@ -48,6 +48,9 @@ $PAGE->set_heading($title);
 $PAGE->set_pagetype('admin-' . $PAGE->pagetype);
 $PAGE->set_url($url);
 
+// Check if a report export was requested.
+$dataformat = optional_param('dataformat', '', PARAM_ALPHA);
+
 // Initialize the filter form for the report.
 $form = new cart_search_form($url, [], 'get');
 
@@ -60,6 +63,12 @@ if ($form->is_cancelled()) {
 // Process filter data and fetch the relevant cart reports.
 $search = new cart_search();
 $search->load_data($form->get_data());
+
+if ($dataformat !== '') {
+    $search->export($dataformat);
+    exit();
+}
+
 $carts = $search->get_all();
 $total = $search->count_all();
 $offset = $search->get_offset();
@@ -75,6 +84,7 @@ $table->head = [
     $search->get_table_column_head('coupon_code', get_string('coupon_code', 'enrol_cart')),
     get_string('discount', 'enrol_cart'),
     $search->get_table_column_head('payable', get_string('payable', 'enrol_cart')),
+    $search->get_table_column_head('gateway', get_string('gateway', 'report_cart')),
     $search->get_table_column_head('status', get_string('cart_status', 'enrol_cart')),
     $search->get_table_column_head('checkout_at', get_string('checkout_at', 'report_cart')),
 ];
@@ -85,7 +95,7 @@ $i = $offset;
 // Add a row to the table indicating no results were found, spanning all columns.
 if (empty($carts)) {
     $cell = new html_table_cell(get_string('no_results_found', 'report_cart'));
-    $cell->colspan = 8;
+    $cell->colspan = 9;
     $cell->attributes['class'] = 'text-center';
     $table->data[] = new html_table_row([$cell]);
 }
@@ -107,6 +117,7 @@ foreach ($carts as $cart) {
         ])
             : '--',
         html_writer::tag('span', $cart->get_payable_formatted(), ['class' => 'currency']),
+        $cart->gateway ?: '--',
         $cart->get_status_name_formatted_html(),
         $cart->is_delivered ? userdate($cart->checkout_at) : '--',
     ];
@@ -139,5 +150,14 @@ echo $OUTPUT->paging_bar(
     $search->get_perpage(),
     new moodle_url('/report/cart/index.php', $search->get_url_params()),
 );
+
+if (!empty($carts)) {
+    echo $OUTPUT->download_dataformat_selector(
+        get_string('downloadas', 'table'),
+        $url->out(false),
+        'dataformat',
+        $search->get_url_params(),
+    );
+}
 
 echo $OUTPUT->footer();

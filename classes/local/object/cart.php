@@ -56,6 +56,7 @@ use moodle_url;
  * @property string $username The username of the associated user.
  * @property string $first_name The first name of the associated user.
  * @property string $last_name The last name of the associated user.
+ * @property string|null $gateway The payment gateway used for the cart.
  * @property user $user The user object associated with the cart.
  */
 class cart extends base_model {
@@ -91,6 +92,7 @@ class cart extends base_model {
             'email',
             'first_name',
             'last_name',
+            'gateway',
         ];
     }
 

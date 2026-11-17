@@ -26,11 +26,13 @@
 
 namespace report_cart\local\object;
 
+use core\dataformat;
 use enrol_cart\local\formatter\currency_formatter;
 use enrol_cart\local\helper\cart_helper;
 use enrol_cart\local\object\base_object;
 use enrol_cart\local\object\cart_status_interface;
 use html_writer;
+use moodle_recordset;
 use moodle_url;
 
 /**
@@ -73,6 +75,13 @@ class cart_search extends base_object {
      * @var string|null
      */
     private ?string $status = null;
+
+    /**
+     * Search filter for payment gateway.
+     *
+     * @var string|null
+     */
+    private ?string $gateway = null;
 
     /**
      * Search filter for start date of checkout.
@@ -126,7 +135,7 @@ class cart_search extends base_object {
      * @return void
      */
     public function load_data(?object $data): void {
-        $fields = ['id', 'user', 'couponcode', 'status', 'from', 'to'];
+        $fields = ['id', 'user', 'couponcode', 'status', 'gateway', 'from', 'to'];
         foreach ($fields as $field) {
             if (isset($data->$field) && $data->$field != '') {
                 $this->$field = $data->$field;
@@ -141,11 +150,13 @@ class cart_search extends base_object {
      */
     private function build_where(): string {
         $where = [];
+        $this->params = [];
 
         $this->add_condition($where, 'c.id = :id', 'id', $this->id);
         $this->add_condition($where, 'c.user_id = :user', 'user', $this->user);
         $this->add_condition($where, 'c.status = :status', 'status', $this->status);
         $this->add_condition($where, 'c.coupon_code = :coupon_code', 'coupon_code', $this->couponcode);
+        $this->add_condition($where, 'p.gateway = :gateway', 'gateway', $this->gateway);
 
         if ($this->from || $this->to) {
             $this->add_condition(
@@ -191,13 +202,16 @@ class cart_search extends base_object {
     /**
      * Build the complete SQL query based on the applied filters.
      *
+     * @param bool $paginated Whether to apply LIMIT and OFFSET for pagination.
      * @return string The complete SQL query.
      */
-    private function build_query(): string {
-        $select = 'c.*, u.username, u.email, u.firstname as first_name, u.lastname as last_name';
+    private function build_query(bool $paginated = true): string {
+        $select = 'c.*, u.username, u.email, u.firstname as first_name, u.lastname as last_name, p.gateway';
         $where = $this->build_where();
 
-        $sql = "SELECT {$select} FROM {enrol_cart} c INNER JOIN {user} u ON c.user_id = u.id";
+        $sql = "SELECT {$select} FROM {enrol_cart} c
+                INNER JOIN {user} u ON c.user_id = u.id
+                LEFT JOIN {payments} p ON p.component = 'enrol_cart' AND p.itemid = c.id";
         if (!empty($where)) {
             $sql .= " WHERE {$where}";
         }
@@ -208,9 +222,11 @@ class cart_search extends base_object {
             $sql .= " ORDER BY {$sort} {$dir}";
         }
 
-        $limit = $this->get_perpage();
-        $offset = $this->get_offset();
-        $sql .= " LIMIT {$limit} OFFSET {$offset}";
+        if ($paginated) {
+            $limit = $this->get_perpage();
+            $offset = $this->get_offset();
+            $sql .= " LIMIT {$limit} OFFSET {$offset}";
+        }
 
         return $sql;
     }
@@ -223,7 +239,8 @@ class cart_search extends base_object {
     private function build_count_query(): string {
         $where = $this->build_where();
 
-        $sql = 'SELECT COUNT(c.id) FROM {enrol_cart} c';
+        $sql = "SELECT COUNT(c.id) FROM {enrol_cart} c
+                LEFT JOIN {payments} p ON p.component = 'enrol_cart' AND p.itemid = c.id";
         if (!empty($where)) {
             $sql .= " WHERE {$where}";
         }
@@ -243,7 +260,8 @@ class cart_search extends base_object {
     private function build_sum_query(): string {
         $where = $this->build_where();
 
-        $sql = 'SELECT SUM(c.payable) as payable, c.currency FROM {enrol_cart} c';
+        $sql = "SELECT SUM(c.payable) as payable, c.currency FROM {enrol_cart} c
+                LEFT JOIN {payments} p ON p.component = 'enrol_cart' AND p.itemid = c.id";
         if (!empty($where)) {
             $sql .= " WHERE {$where}";
         }
@@ -262,6 +280,68 @@ class cart_search extends base_object {
         global $DB;
         $rows = $DB->get_records_sql($this->build_query(), $this->params);
         return cart::populate($rows);
+    }
+
+    /**
+     * Retrieve a recordset of all carts matching the search criteria without pagination.
+     *
+     * @return moodle_recordset
+     */
+    public function get_recordset(): moodle_recordset {
+        global $DB;
+        return $DB->get_recordset_sql($this->build_query(false), $this->params);
+    }
+
+    /**
+     * Export all carts matching the current search criteria in the requested dataformat.
+     *
+     * @param string $dataformat Export format name (e.g., csv, excel, ods, json).
+     * @return void
+     */
+    public function export(string $dataformat): void {
+        $columns = [
+            'id' => get_string('order_id', 'enrol_cart'),
+            'username' => get_string('username'),
+            'user' => get_string('user', 'enrol_cart'),
+            'coupon_code' => get_string('coupon_code', 'enrol_cart'),
+            'discount' => get_string('discount', 'enrol_cart'),
+            'payable' => get_string('payable', 'enrol_cart'),
+            'currency' => get_string('currency', 'report_cart'),
+            'gateway' => get_string('gateway', 'report_cart'),
+            'status' => get_string('cart_status', 'enrol_cart'),
+            'checkout_at' => get_string('checkout_at', 'report_cart'),
+        ];
+
+        $filename = clean_filename(
+            get_string('pluginname', 'report_cart') . '_' .
+            userdate(time(), get_string('backupnameformat', 'langconfig'), 99, false)
+        );
+
+        $recordset = $this->get_recordset();
+        dataformat::download_data(
+            $filename,
+            $dataformat,
+            $columns,
+            $recordset,
+            function($record) {
+                $cart = cart::populate_one($record);
+                return (object) [
+                    'id' => $cart->id,
+                    'username' => $cart->username,
+                    'user' => $cart->user->full_name,
+                    'coupon_code' => $cart->coupon_code ?: '--',
+                    'discount' => $cart->get_final_discount_amount() ?? 0,
+                    'payable' => (float) ($cart->payable ?? 0),
+                    'currency' => $cart->get_final_currency(),
+                    'gateway' => $cart->gateway ?: '--',
+                    'status' => $cart->get_status_name(),
+                    'checkout_at' => $cart->is_delivered
+                        ? userdate($cart->checkout_at, '%Y-%m-%d %H:%M', 99, false, false)
+                        : '--',
+                ];
+            },
+        );
+        $recordset->close();
     }
 
     /**
@@ -342,7 +422,7 @@ class cart_search extends base_object {
      */
     public function get_sort(): ?string {
         if ($this->sort === null) {
-            $allowedsortfields = ['id', 'coupon_code', 'payable', 'status', 'checkout_at'];
+            $allowedsortfields = ['id', 'coupon_code', 'payable', 'gateway', 'status', 'checkout_at'];
             $sort = optional_param('sort', 'checkout_at', PARAM_ALPHANUMEXT);
             if (in_array($sort, $allowedsortfields)) {
                 $this->sort = $sort;
@@ -412,8 +492,11 @@ class cart_search extends base_object {
         $params = [];
 
         // List of fields to include in url.
-        $fields = ['id', 'user', 'couponcode', 'status', 'from', 'to', 'sort', 'dir'];
+        $fields = ['id', 'user', 'couponcode', 'status', 'gateway', 'from', 'to', 'sort', 'dir'];
         foreach ($fields as $field) {
+            if (($field === 'from' || $field === 'to') && empty($this->$field)) {
+                continue;
+            }
             $params[$field] = (string) $this->$field;
         }
 

@@ -50,6 +50,8 @@ class cart_search_form extends moodleform {
      * @return void
      */
     public function definition() {
+        global $DB;
+
         $form = $this->_form;
 
         // Add a text field for filtering by order ID.
@@ -86,6 +88,19 @@ class cart_search_form extends moodleform {
         $options += cart::get_status_options();
         $form->addElement('select', 'status', get_string('cart_status', 'enrol_cart'), $options);
         $form->setDefault('status', cart_status_interface::STATUS_DELIVERED);
+
+        // Add a dropdown selector for filtering by payment gateway.
+        $gateways = $DB->get_records_sql("
+            SELECT DISTINCT gateway
+            FROM {payments}
+            WHERE component = 'enrol_cart' AND gateway IS NOT NULL
+            ORDER BY gateway
+        ");
+        $gatewayoptions = ['' => get_string('all', 'report_cart')];
+        foreach ($gateways as $gateway) {
+            $gatewayoptions[$gateway->gateway] = ucfirst($gateway->gateway);
+        }
+        $form->addElement('select', 'gateway', get_string('gateway', 'report_cart'), $gatewayoptions);
 
         // Add date selectors for filtering by checkout time range.
         $form->addElement('date_selector', 'from', get_string('checkout_time_from', 'report_cart'), [
