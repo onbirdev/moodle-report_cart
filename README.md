@@ -1,6 +1,7 @@
 # Moodle Cart Report Plugin
 
-The Moodle Cart Report Plugin provides detailed insights into shopping cart activities within Moodle. This plugin is designed to help administrators monitor cart usage, payment statuses, and other relevant details effectively.
+The Moodle Cart Report Plugin provides detailed insights into shopping cart activities within Moodle. This plugin is
+designed to help administrators monitor cart usage, payment statuses, and other relevant details effectively.
 
 ---
 
