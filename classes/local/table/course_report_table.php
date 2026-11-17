@@ -31,6 +31,7 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->libdir . '/tablelib.php');
 
+use enrol_cart\local\helper\cart_helper;
 use enrol_cart\local\object\cart_status_interface;
 use html_writer;
 use moodle_url;
@@ -44,6 +45,9 @@ class course_report_table extends table_sql {
     /** @var string Field name containing the user ID. */
     public $useridfield = 'user_id';
 
+    /** @var int Counter for rendered rows within the current page or export. */
+    private int $rowcounter = 0;
+
     /**
      * Constructor.
      *
@@ -52,8 +56,10 @@ class course_report_table extends table_sql {
     public function __construct($uniqueid) {
         parent::__construct($uniqueid);
 
-        $columns = ['username', 'fullname', 'shortname', 'amount', 'currency', 'gateway', 'timecreated', 'status'];
+        $columns = ['rownum', 'order_id', 'username', 'fullname', 'shortname', 'amount', 'currency', 'gateway', 'timecreated', 'status'];
         $headers = [
+            '#',
+            get_string('order_id', 'enrol_cart'),
             get_string('username'),
             get_string('firstname'),
             get_string('course'),
@@ -67,10 +73,38 @@ class course_report_table extends table_sql {
         $this->define_columns($columns);
         $this->define_headers($headers);
 
+        $this->no_sorting('rownum');
         $this->sortable(true, 'timecreated', SORT_DESC);
         $this->collapsible(false);
         $this->is_downloadable(true);
         $this->show_download_buttons_at([TABLE_P_BOTTOM]);
+    }
+
+    /**
+     * Format the row number column.
+     *
+     * @param object $row Database row object.
+     * @return int
+     */
+    public function col_rownum($row) {
+        $offset = ($this->use_pages && !$this->is_downloading()) ? (int) $this->get_page_start() : 0;
+        return $offset + (++$this->rowcounter);
+    }
+
+    /**
+     * Format the order ID column with a link to the cart view page.
+     *
+     * @param object $row Database row object.
+     * @return string
+     */
+    public function col_order_id($row) {
+        if ($this->is_downloading()) {
+            return $row->order_id;
+        }
+        return html_writer::link(
+            cart_helper::get_cart_view_url((int) $row->order_id),
+            $row->order_id,
+        );
     }
 
     /**

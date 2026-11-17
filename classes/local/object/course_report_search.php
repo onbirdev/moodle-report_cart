@@ -115,6 +115,7 @@ class course_report_search {
     public function get_sql_fields(): string {
         return '
             eci.id,
+            ec.id as order_id,
             ec.user_id,
             u.username,
             u.firstname,
