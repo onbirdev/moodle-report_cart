@@ -36,4 +36,14 @@ $ADMIN->add(
     ),
 );
 
+$ADMIN->add(
+    'reports',
+    new admin_externalpage(
+        'report_cart_course',
+        get_string('course_report', 'report_cart'),
+        new moodle_url('/report/cart/course_report.php'),
+        'report/cart:view',
+    ),
+);
+
 $settings = null;
